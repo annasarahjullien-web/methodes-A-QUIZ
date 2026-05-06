@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧬 Quiz Secteur A SVTU - Agrégation Sciences de la Vie</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.20/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        #root {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            gap: 0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: white;
+            border-bottom-color: white;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .tab-btn:hover {
+            color: white;
+        }
+
+        .tab-content {
+            padding: 2.5rem;
+            display: none;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 1.5rem;
+        }
+
+        .quiz-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.4s ease;
+        }
+
+        .question-box {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 0.2%);
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .emoji {
+            font-size: 1.8rem;
+            margin-right: 12px;
+            display: inline-block;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .option-btn {
+            padding: 14px 16px;
+            text-align: left;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .option-btn:not(:disabled):hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateX(4px);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .option-btn.correct {
+            background: #c8e6c9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .explanation {
+            padding: 1.5rem;
+            background: #e3f2fd;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 2rem;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .explanation p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #1565c0;
+        }
+
+        .explanation strong {
+            color: #0d47a1;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:disabled {
+            background: #e0e0e0;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:not(:disabled) {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-btn:not(:disabled):hover {
+            background: #e8e8e8;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .next-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .results {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .results-emoji {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: bounce 1s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .results h2 {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-message {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .restart-btn {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .guide-section {
+            margin-bottom: 3rem;
+        }
+
+        .guide-section h2 {
+            color: #667eea;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .guide-section h3 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .guide-section p, .guide-section li {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #555;
+            margin-bottom: 0.8rem;
+        }
+
+        .guide-section ul, .guide-section ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .guide-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .guide-section table td, .guide-section table th {
+            border: 1px solid #ddd;
+            padding: 0.8rem;
+            text-align: left;
+        }
+
+        .guide-section table th {
+            background: #f0f0f0;
+            font-weight: 600;
+        }
+
+        .method-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+
+        .method-card strong {
+            color: #667eea;
+        }
+
+        .cheatsheet-box {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe6e6 100%);
+            border: 2px solid #ffd700;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .cheatsheet-box h4 {
+            color: #d97706;
+            margin-bottom: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            .tab-content {
+                padding: 1.5rem;
+            }
+
+            .quiz-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .question-text {
+                font-size: 1rem;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab-btn {
+                flex: 1 1 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('quiz');
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [score, setScore] = useState(0);
+            const [answered, setAnswered] = useState(false);
+            const [showResult, setShowResult] = useState(false);
+
+            const quizData = [
+                {
+                    id: 1,
+                    type: 'choice',
+                    question: 'Quel est le grossissement maximum d\'un microscope optique avant perte de résolution?',
+                    options: ['500x', '1000x', '2000x', '10000x'],
+                    correct: 1,
+                    explanation: 'La limite de résolution du microscope optique est environ 200 nm. Au-delà de ~1000x, on a de l\'agrandissement vide.',
+                    emoji: '🔬'
+                },
+                {
+                    id: 2,
+                    type: 'choice',
+                    question: 'Quel fixateur est utilisé pour la microscopie électronique à transmission (MET)?',
+                    options: ['Formaldéhyde uniquement', 'Glutaraldéhyde + Tétraoxyde d\'osmium', 'Éthanol', 'Eau distillée'],
+                    correct: 1,
+                    explanation: 'La double fixation (glutaraldéhyde + OsO₄) est essentielle en MET. Le glutaraldéhyde stabilise les protéines, l\'osmium contraste les lipides.',
+                    emoji: '⚗️'
+                },
+                {
+                    id: 3,
+                    type: 'choice',
+                    question: 'Quelle technique sépare les molécules d\'ADN selon leur taille?',
+                    options: ['Chromatographie d\'affinité', 'Électrophorèse sur gel d\'agarose', 'Centrifugation', 'Filtration'],
+                    correct: 1,
+                    explanation: 'L\'électrophorèse sur gel d\'agarose est LA technique classique de séparation d\'ADN. Les fragments migrent selon leur taille.',
+                    emoji: '⚡'
+                },
+                {
+                    id: 4,
+                    type: 'choice',
+                    question: 'Quel est le rôle de l\'EDTA dans l\'extraction d\'ADN?',
+                    options: ['Catalyser la réaction', 'Chélater les ions Mg²⁺ et inactiver les DNases', 'Colorer l\'ADN', 'Augmenter le pH'],
+                    correct: 1,
+                    explanation: 'L\'EDTA chélate les divalents (Mg²⁺, Ca²⁺) dont dépendent les DNases. En les séquestrant, on protège l\'ADN.',
+                    emoji: '🛡️'
+                },
+                {
+                    id: 5,
+                    type: 'choice',
+                    question: 'Quel colorant révèle les protéines en électrophorèse?',
+                    options: ['Hématoxyline-Éosine', 'Bleu de Coomassie', 'Méthylène bleu', 'Safranine'],
+                    correct: 1,
+                    explanation: 'Le Bleu de Coomassie est le colorant standard pour les protéines sur gel. H&E est pour l\'histologie tissulaire.',
+                    emoji: '🎨'
+                },
+                {
+                    id: 6,
+                    type: 'choice',
+                    question: 'Quel est le nombre de cycles thermiques typique en PCR?',
+                    options: ['5-10 cycles', '20-25 cycles', '30-40 cycles', '50-100 cycles'],
+                    correct: 2,
+                    explanation: 'La PCR standard utilise 30-35 cycles. Chaque cycle: dénaturation (94°C), hybridation (55°C), élongation (72°C).',
+                    emoji: '🌡️'
+                },
+                {
+                    id: 7,
+                    type: 'choice',
+                    question: 'Quel microscopie donne les meilleures résolutions de l\'ultrastructure cellulaire?',
+                    options: ['Microscopie optique', 'Microscopie à fluorescence', 'Microscopie électronique à transmission (MET)', 'Loupe binoculaire'],
+                    correct: 2,
+                    explanation: 'La MET atteint une résolution de 0.1-1 nm (vs 200 nm pour l\'optique). Elle révèle ultrastructures.',
+                    emoji: '🔬'
+                },
+                {
+                    id: 8,
+                    type: 'choice',
+                    question: 'Quel est le rôle de la déshydratation dans la préparation d\'échantillons?',
+                    options: ['Tuer les pathogènes', 'Remplacer l\'eau pour permettre l\'inclusion en paraffine/résines', 'Fixer les protéines', 'Augmenter le contraste'],
+                    correct: 1,
+                    explanation: 'La déshydratation progressive (70%, 90%, 100% éthanol) remplace l\'eau avant l\'inclusion.',
+                    emoji: '💧'
+                },
+                {
+                    id: 9,
+                    type: 'choice',
+                    question: 'Quelle enzyme de restriction coupe l\'ADN et produit des extrémités collantes?',
+                    options: ['Toutes les enzymes', 'Seules certaines (ex: EcoRI, BamHI)', 'Aucune', 'La Taq polymérase'],
+                    correct: 1,
+                    explanation: 'Certaines enzymes (EcoRI, BamHI, PstI...) font des coupures décalées produisant des "sticky ends".',
+                    emoji: '✂️'
+                },
+                {
+                    id: 10,
+                    type: 'choice',
+                    question: 'Quel type de chromatographie sépare les protéines selon leur poids moléculaire?',
+                    options: ['Chromatographie d\'échange d\'ions', 'Chromatographie d\'exclusion stérique (SEC)', 'Chromatographie d\'affinité', 'Chromatographie de partage'],
+                    correct: 1,
+                    explanation: 'La SEC (gel filtration) sépare par taille: grosses protéines éluent en premier, petites en dernier.',
+                    emoji: '⬜'
+                },
+                {
+                    id: 11,
+                    type: 'choice',
+                    question: 'Quel tampon est typiquement utilisé en électrophorèse d\'ADN?',
+                    options: ['PBS (tampon phosphate)', 'TAE (Tris-acétate-EDTA)', 'Tampon de charge uniquement', 'NaCl pur'],
+                    correct: 1,
+                    explanation: 'TAE ou TBE assurent la conductivité et le pH pendant la migration. TAE est préféré.',
+                    emoji: '⚡'
+                },
+                {
+                    id: 12,
+                    type: 'choice',
+                    question: 'En combien de temps la fixation au formaldéhyde est-elle généralement complète?',
+                    options: ['15-30 min', '1-2h', '2-4h', '24h ou plus'],
+                    correct: 2,
+                    explanation: 'La fixation au formaldéhyde prend généralement 2-4h à température ambiante pour des petits tissus.',
+                    emoji: '⏱️'
+                }
+            ];
+
+            const handleAnswer = (selectedIndex) => {
+                if (!answered) {
+                    const isCorrect = selectedIndex === quizData[currentQuestion].correct;
+                    if (isCorrect) {
+                        setScore(score + 1);
+                    }
+                    setAnswered(true);
+                    setShowResult(true);
+                }
+            };
+
+            const goToNext = () => {
+                if (currentQuestion < quizData.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                    setAnswered(false);
+                    setShowResult(false);
+                }
+            };
+
+            const goToPrev = () => {
+                if (currentQuestion > 0) {
+                    setCurrentQuestion(currentQuestion - 1);
+                    setAnswered(false);
+                    setShowResult(false);
+                }
+            };
+
+            const restart = () => {
+                setCurrentQuestion(0);
+                setScore(0);
+                setAnswered(false);
+                setShowResult(false);
+            };
+
+            const question = quizData[currentQuestion];
+            const percentage = Math.round((score / quizData.length) * 100);
+            const isFinished = currentQuestion === quizData.length - 1 && answered;
+
+            return (
+                <div className="main-container">
+                    <div className="tabs">
+                        <button className={`tab-btn ${activeTab === 'quiz' ? 'active' : ''}`} onClick={() => setActiveTab('quiz')}>
+                            🎮 Quiz
+                        </button>
+                        <button className={`tab-btn ${activeTab === 'methodes' ? 'active' : ''}`} onClick={() => setActiveTab('methodes')}>
+                            📚 Méthodes
+                        </button>
+                        <button className={`tab-btn ${activeTab === 'cheatsheet' ? 'active' : ''}`} onClick={() => setActiveTab('cheatsheet')}>
+                            📋 Feuille de Triche
+                        </button>
+                    </div>
+
+                    {/* TAB QUIZ */}
+                    <div className={`tab-content ${activeTab === 'quiz' ? 'active' : ''}`}>
+                        <div className="quiz-header">
+                            <h1>🧬 Quiz Secteur A SVTU</h1>
+                            <p>Maîtrisez les méthodes de laboratoire essentielles</p>
+                        </div>
+
+                        {!isFinished ? (
+                            <>
+                                <div className="progress-section">
+                                    <div className="progress-info">
+                                        <span>Question {currentQuestion + 1}/{quizData.length}</span>
+                                        <span style={{ color: '#667eea' }}>Score: {score}/{quizData.length}</span>
+                                    </div>
+                                    <div className="progress-bar">
+                                        <div className="progress-fill" style={{ width: `${((currentQuestion + 1) / quizData.length) * 100}%` }}></div>
+                                    </div>
+                                </div>
+
+                                <div className="question-box">
+                                    <p className="question-text">
+                                        <span className="emoji">{question.emoji}</span>
+                                        {question.question}
+                                    </p>
+                                </div>
+
+                                <div className="options">
+                                    {question.options.map((option, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleAnswer(idx)}
+                                            disabled={answered}
+                                            className={`option-btn ${answered && idx === question.correct ? 'correct' : ''}`}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {showResult && (
+                                    <div className="explanation">
+                                        <p><strong>💡 Explication:</strong> {question.explanation}</p>
+                                    </div>
+                                )}
+
+                                {answered && (
+                                    <div className="navigation">
+                                        <button onClick={goToPrev} disabled={currentQuestion === 0} className="nav-btn">
+                                            ← Précédent
+                                        </button>
+                                        <button onClick={goToNext} className="nav-btn next-btn">
+                                            Suivant →
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="results">
+                                <div className="results-emoji">
+                                    {percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪'}
+                                </div>
+                                <h2>Quiz Terminé!</h2>
+                                <div className="score-display">
+                                    Score: {score}/{quizData.length} ({percentage}%)
+                                </div>
+                                <p className="results-message">
+                                    {percentage >= 90 && 'Excellent! Vous maîtrisez parfaitement les méthodes du secteur A! 🏆'}
+                                    {percentage >= 80 && percentage < 90 && 'Très bon! Quelques points à revoir mais c\'est solide!'}
+                                    {percentage >= 60 && percentage < 80 && 'Correct, mais il faut revoir les détails techniques.'}
+                                    {percentage < 60 && 'À retravailler! Révisez les protocoles et réessayez.'}
+                                </p>
+                                <button onClick={restart} className="restart-btn">
+                                    🔄 Recommencer
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* TAB METHODES */}
+                    <div className={`tab-content ${activeTab === 'methodes' ? 'active' : ''}`}>
+                        <div className="guide-section">
+                            <h2>📚 Les 10 Méthodes Essentielles du Secteur A</h2>
+                            
+                            <h3>1. 🔬 Microscopie Optique</h3>
+                            <div className="method-card">
+                                <p><strong>Résolution:</strong> ~200 nm (0.2 μm)</p>
+                                <p><strong>Grossissement utile:</strong> 400-1000x</p>
+                                <p><strong>Types:</strong> Fond clair, fond noir, contraste de phase</p>
+                                <p><strong>Limite:</strong> Beyond 1000x = agrandissement vide</p>
+                            </div>
+
+                            <h3>2. ⚗️ Fixation Cellulaire</h3>
+                            <div className="method-card">
+                                <p><strong>Objectif:</strong> Stabiliser structures et protéines</p>
+                                <p><strong>Optique:</strong> Formaldéhyde 4%, Ethanol 70-100%</p>
+                                <p><strong>MET:</strong> Glutaraldéhyde 2.5% PUIS OsO₄ (ordre CRITIQUE!)</p>
+                                <p><strong>Durée:</strong> 2-4h à température ambiante</p>
+                            </div>
+
+                            <h3>3. 💧 Déshydratation</h3>
+                            <div className="method-card">
+                                <p><strong>Protocole:</strong> 70% → 90% → 100% éthanol (5-10 min chacun)</p>
+                                <p><strong>But:</strong> Remplacer l\'eau avant inclusion en paraffine</p>
+                                <p><strong>Clé:</strong> Progressivité ESSENTIELLE (évite rupture)</p>
+                            </div>
+
+                            <h3>4. 📦 Inclusion en Paraffine</h3>
+                            <div className="method-card">
+                                <p><strong>Étapes:</strong> Infiltration (37°C) → Imprégnation (60°C) → Polymérisation</p>
+                                <p><strong>Résultat:</strong> Bloc solide contenant tissu</p>
+                                <p><strong>Épaisseur:</strong> 5-10 μm pour optique</p>
+                            </div>
+
+                            <h3>5. ✂️ Microtomie (Coupes)</h3>
+                            <div className="method-card">
+                                <p><strong>Épaisseur optique:</strong> 5-10 μm</p>
+                                <p><strong>Épaisseur MET:</strong> 70-90 nm (ultra-fine!)</p>
+                                <p><strong>Outil:</strong> Microtome manuel ou rotatif</p>
+                                <p><strong>Lame chauffée:</strong> ~30-40°C (pour dérouler)</p>
+                            </div>
+
+                            <h3>6. 🎨 Colorations Histologiques</h3>
+                            <div className="method-card">
+                                <p><strong>H&E (Standard):</strong> Noyau=Bleu-violet, Cytoplasme=Rose</p>
+                                <p><strong>PAS:</strong> Détecte polysaccharides (Magenta)</p>
+                                <p><strong>Gram:</strong> Gram+=Violet, Gram-=Rose</p>
+                                <p><strong>Usage:</strong> 90% de la routine d\'histologie</p>
+                            </div>
+
+                            <h3>7. ⚡ Électrophorèse sur Gel d\'Agarose</h3>
+                            <div className="method-card">
+                                <p><strong>Sépare par:</strong> TAILLE de l\'ADN</p>
+                                <p><strong>Protocole:</strong> Gel 0.8% → Dépôt ADN → 100V 1h → Visualisation UV</p>
+                                <p><strong>Tampon:</strong> TAE (Tris-acétate-EDTA)</p>
+                                <p><strong>Marqueur:</strong> Fragment de poids moléculaire connu</p>
+                            </div>
+
+                            <h3>8. 🧪 Extraction d\'ADN</h3>
+                            <div className="method-card">
+                                <p><strong>Méthode CTAB:</strong> Broyage → Lyse → EDTA → Centrifugation → Lavage</p>
+                                <p><strong>EDTA (ESSENTIEL):</strong> Chélate Mg²⁺, désactive DNases</p>
+                                <p><strong>Rendement:</strong> ~μg/mL d\'ADN pur</p>
+                            </div>
+
+                            <h3>9. 🔥 PCR (Amplification d\'ADN)</h3>
+                            <div className="method-card">
+                                <p><strong>Cycle (x30-35):</strong></p>
+                                <ul>
+                                    <li>Dénaturation: 94°C 15 sec (briser doubles brins)</li>
+                                    <li>Hybridation: 55°C 30 sec (amorces s\'attachent)</li>
+                                    <li>Élongation: 72°C 1 min/kb (Taq synthétise)</li>
+                                </ul>
+                                <p><strong>Amplification:</strong> 2^30-35 (exponentiel!)</p>
+                            </div>
+
+                            <h3>10. 📊 Chromatographie</h3>
+                            <div className="method-card">
+                                <p><strong>Exclusion stérique (SEC):</strong> Sépare par TAILLE (grosses sortent en premier)</p>
+                                <p><strong>Échange d\'ions:</strong> Sépare par CHARGE</p>
+                                <p><strong>Affinité:</strong> Sépare par LIAISON SPÉCIFIQUE</p>
+                                <p><strong>HPLC:</strong> Haute résolution pour complexe</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* TAB CHEATSHEET */}
+                    <div className={`tab-content ${activeTab === 'cheatsheet' ? 'active' : ''}`}>
+                        <h2>📋 Feuille de Résumé Rapide</h2>
+
+                        <div className="cheatsheet-box">
+                            <h4>🔑 LES CONSTANTES À RETENIR</h4>
+                            <p><strong>Microscope optique:</strong> Max 1000x (sinon agrandissement vide)</p>
+                            <p><strong>Fixation MET:</strong> Glutaraldéhyde PUIS OsO₄ (ordre CRITIQUE)</p>
+                            <p><strong>EDTA:</strong> Chélate Mg²⁺, désactive DNases</p>
+                            <p><strong>PCR:</strong> 30-35 cycles (pas 50, pas 10!)</p>
+                            <p><strong>Électrophorèse:</strong> Sépare par TAILLE</p>
+                            <p><strong>SEC:</strong> Grosses molécules sortent EN PREMIER</p>
+                        </div>
+
+                        <div className="cheatsheet-box">
+                            <h4>⚠️ LES PIÈGES À ÉVITER</h4>
+                            <ul>
+                                <li>❌ Oublier la fixation = tout rate</li>
+                                <li>❌ Déshydratation brusque = rupture</li>
+                                <li>❌ OsO₄ AVANT glutaraldéhyde = mauvais</li>
+                                <li>❌ Électrophorèse sans tampon = pas de migration</li>
+                                <li>❌ EDTA absent = ADN dégradé</li>
+                                <li>❌ Grossissement >1000x = image floue</li>
+                            </ul>
+                        </div>
+
+                        <div className="cheatsheet-box">
+                            <h4>✅ LES 3 POINTS À DÉFENDRE</h4>
+                            <ol>
+                                <li><strong>Microscopie optique:</strong> Résolution ~200nm, max 1000x</li>
+                                <li><strong>Extraction ADN:</strong> EDTA = chélate Mg²⁺ + désactive DNases</li>
+                                <li><strong>Électrophorèse:</strong> Sépare par TAILLE dans un champ électrique</li>
+                            </ol>
+                        </div>
+
+                        <div className="cheatsheet-box">
+                            <h4>🎯 PLAN DE 4 JOURS</h4>
+                            <table>
+                                <tr><td><strong>Jour 1</strong></td><td>Microscopie, Fixation, Déshydratation</td></tr>
+                                <tr><td><strong>Jour 2</strong></td><td>Inclusion, Microtomie, Colorations</td></tr>
+                                <tr><td><strong>Jour 3</strong></td><td>Extraction ADN, PCR, Électrophorèse</td></tr>
+                                <tr><td><strong>Jour 4</strong></td><td>Chromatographie + Quiz x3</td></tr>
+                            </table>
+                        </div>
+
+                        <div className="cheatsheet-box">
+                            <h4>💡 CONSEILS DE RÉVISION</h4>
+                            <ol>
+                                <li>Passez le quiz 3-4 fois (questions mélangées)</li>
+                                <li>Lisez CHAQUE explication - c\'est là que sont les détails</li>
+                                <li>Écrivez les étapes Fixation → Déshydratation → Inclusion...</li>
+                                <li>Dessinez mentalement les protocoles</li>
+                                <li>Testez-vous SANS aide la veille du CC</li>
+                                <li>Posez-vous "pourquoi?" à chaque étape</li>
+                            </ol>
+                        </div>
+
+                        <div className="cheatsheet-box">
+                            <h4>📊 SCORING OBJECTIF</h4>
+                            <table>
+                                <tr><th>Score</th><th>Status</th><th>Action</th></tr>
+                                <tr><td>90-100%</td><td>🎉 Excellent</td><td>Prêt pour le CC!</td></tr>
+                                <tr><td>80-89%</td><td>👍 Très bon</td><td>Bon état général</td></tr>
+                                <tr><td>60-79%</td><td>📚 Correct</td><td>Revoir détails</td></tr>
+                                <tr><td>&lt;60%</td><td>💪 À retravailler</td><td>Recommencer</td></tr>
+                            </table>
+                        </div>
+
+                        <div className="cheatsheet-box">
+                            <h4>🏆 BON COURAGE!</h4>
+                            <p>Vous avez les meilleurs outils pour réussir ce CC. Le secret: réviser intelligemment plutôt que longtemps.</p>
+                            <p><strong>4 jours = largement suffisant si vous êtes méthodique! 💪</strong></p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
